@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t autosapien/client-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true autosapien/client-test npm test  
+
+after_success:
+  - docker build -t autosapien/multicontainer-client ./client
+  - docker build -t autosapien/multicontainer-nginx ./nginx
+  - docker build -t autosapien/multicontainer-server ./server  
+  - docker build -t autosapien/multicontainer-worker ./worker
+  # login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take these image and push them to docker hub
+  - docker push autosapien/multicontainer-client
+  - docker push autosapien/multicontainer-nginx
+  - docker push autosapien/multicontainer-server
+  - docker push autosapien/multicontainer-worker
